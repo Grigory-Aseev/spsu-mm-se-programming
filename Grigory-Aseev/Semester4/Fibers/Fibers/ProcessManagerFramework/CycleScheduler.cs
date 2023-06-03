@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Threading.Channels;
 
 namespace Fibers.ProcessManagerFramework;
 
@@ -8,7 +9,6 @@ public class CycleScheduler : IScheduler
 {
     private readonly Queue<FiberStorage> _fibers;
     private uint _deprecatedFiber;
-    private bool _disposed;
 
     public CycleScheduler()
     {
@@ -39,6 +39,8 @@ public class CycleScheduler : IScheduler
 
     public void StopFiber(bool isFinished)
     {
+        
+        
         if (_fibers.Count == 0) throw new InvalidOperationException("There is no fiber to stop at the moment.");
 
         if (isFinished)
@@ -49,7 +51,10 @@ public class CycleScheduler : IScheduler
         else
         {
             var fiber = _fibers.Dequeue();
-            fiber.State = FiberState.Paused;
+            if (_fibers.Count != 0)
+            {
+                fiber.State = FiberState.Paused;
+            }
             _fibers.Enqueue(fiber);
         }
     }
@@ -61,24 +66,15 @@ public class CycleScheduler : IScheduler
         _fibers.Enqueue(new FiberStorage(fiber.Id, 0, fiberTime));
     }
 
-    private protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed) return;
-        if (disposing)
-            if (_deprecatedFiber != 0 || _fibers.Count != 0)
-                throw new UnreachableException("There should be no active fibers and no fiber to be removed.");
-
-        _disposed = true;
-    }
 
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        if (_deprecatedFiber == 0)
+        {
+            return;
+        }
+        Fiber.Delete(_deprecatedFiber);
+        _deprecatedFiber = 0;
     }
 
-    ~CycleScheduler()
-    {
-        Dispose(false);
-    }
 }

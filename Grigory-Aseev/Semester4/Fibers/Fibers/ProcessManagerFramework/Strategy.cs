@@ -2,6 +2,6 @@
 
 public enum Strategy
 {
-    NonPriority = 0,
-    Priority = 1
+    NonPriority,
+    Priority
 }

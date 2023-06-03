@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# C Sharp User-specific folders
+bin/
+obj/
+
 # User-specific files
 *.rsuser
 *.suo
@@ -351,3 +355,12 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+
+## Idea and Clion files
+.idea
+cmake-build-debug/
+
+# Gradle build and cache files
+.gradle/
+build/
