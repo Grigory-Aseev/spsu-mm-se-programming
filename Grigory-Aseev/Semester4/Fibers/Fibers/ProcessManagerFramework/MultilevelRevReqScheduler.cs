@@ -7,13 +7,17 @@ using FibersLib;
 
 public sealed class MultilevelRevReqScheduler : IScheduler
 {
+    // quantum of time to move to a lower priority level
     private const byte QuantumTimeMSeconds = 5;
+    // number of levels
     private const byte NumberLayers = 5;
+    // priority levels
     private readonly PriorityQueue<FiberStorage, long>[] _fibers;
+    // lowest priority level
     private readonly Queue<FiberStorage> _fibersLowest;
     private uint _deprecatedFiber;
     private bool _isLast;
-
+    private int _deleteFibers = 0;
     public MultilevelRevReqScheduler()
     {
         _fibers = new PriorityQueue<FiberStorage, long> [NumberLayers - 1];
@@ -31,6 +35,7 @@ public sealed class MultilevelRevReqScheduler : IScheduler
 
     private (FiberStorage?, bool) FindFiber()
     {
+        // find the current fiber by priority
         for (var i = 0; i < NumberLayers - 1; i++)
             if (_fibers[i].Count > 0)
                 return (_fibers[i].Peek(), false);
@@ -40,12 +45,13 @@ public sealed class MultilevelRevReqScheduler : IScheduler
 
     public void Schedule()
     {
-
+        Console.WriteLine(_deleteFibers);
         var (nextFiber, isLowest) = FindFiber();
 
         if (nextFiber != null && Count() > 1)
         {
-            if (isLowest && _fibersLowest.Count / NumberLayers > 0)
+            // If all are on the lower level, then return some to the upper level
+            if (isLowest)
                 for (var i = 0; i < _fibersLowest.Count / NumberLayers; i++)
                 {
                     var upgradedFiber = _fibersLowest.Dequeue();
@@ -60,6 +66,7 @@ public sealed class MultilevelRevReqScheduler : IScheduler
         }
         else if (nextFiber == null)
         {
+            // there are no fibers left - switch to the main fiber
 
             if (Fiber.PrimaryId != 0)
                 Fiber.Switch(Fiber.PrimaryId);
@@ -68,6 +75,7 @@ public sealed class MultilevelRevReqScheduler : IScheduler
         }
         else if (!_isLast)
         {
+            // switch once to the last fiber
             _isLast = true;
             Fiber.Switch(nextFiber.Id);
         }
@@ -75,15 +83,19 @@ public sealed class MultilevelRevReqScheduler : IScheduler
 
     public void StopFiber(bool isFinished)
     {
+        Console.WriteLine( _deleteFibers);
         var time = DateTime.Now;
         for (var i = 0; i < NumberLayers - 1; i++)
             if (_fibers[i].Count > 0)
             {
                 if (isFinished)
                 {
+                    // delete the previous fiber, and set the next fiber as obsolete
                     if (_deprecatedFiber != 0)
                     {
                         Fiber.Delete(_deprecatedFiber);
+                        _deleteFibers++;
+                        Console.WriteLine(_deleteFibers);
                     }
                     var fiber = _fibers[i].Dequeue();
                     _deprecatedFiber = fiber.Id;
@@ -94,11 +106,13 @@ public sealed class MultilevelRevReqScheduler : IScheduler
                     fiber.OccupiedTime += (time - fiber.StartTime).Milliseconds;
                     if (fiber.OccupiedTime < 8 * QuantumTimeMSeconds * Math.Pow(2, i))
                     {
+                        // if the limit in the current level has not yet been exceeded, update its priority and return
                         _fibers[i].Enqueue(fiber,
                             fiber.Priority + fiber.OccupiedTime / (_fibers[i].Count > 0 ? _fibers[i].Count : 1));
                     }
                     else
                     {
+                        //  otherwise go to the next level
                         if (i == NumberLayers - 2)
                             _fibersLowest.Enqueue(fiber);
                         else
@@ -111,12 +125,16 @@ public sealed class MultilevelRevReqScheduler : IScheduler
                 return;
             }
 
+        // the current fiber is at the lower level, so we also work but do not go lower
+
         if (_fibersLowest.Count == 0) throw new InvalidOperationException("There is no fiber to stop at the moment.");
         if (isFinished)
         {
             if (_deprecatedFiber != 0)
             {
                 Fiber.Delete(_deprecatedFiber);
+                _deleteFibers++;
+                Console.WriteLine(_deleteFibers);
             }
             var fiber = _fibersLowest.Dequeue();
             _deprecatedFiber = fiber.Id;
@@ -138,11 +156,14 @@ public sealed class MultilevelRevReqScheduler : IScheduler
 
     public void Dispose()
     {
+        Console.WriteLine(_deleteFibers);
         if (_deprecatedFiber == 0)
         {
             return;
         }
         Fiber.Delete(_deprecatedFiber);
+        _deleteFibers++;
+        Console.WriteLine(_deleteFibers);
         _deprecatedFiber = 0;
     }
 

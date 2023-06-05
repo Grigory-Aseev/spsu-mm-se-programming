@@ -12,6 +12,7 @@ public class StripedCuckooExamSystem : IExamSystem
     {
         if (_cuckooHashSet.Add((studentId, courseId)))
         {
+            // locking for incrementing count
             lock (_lockerObject) Count++;
         }
     }
@@ -20,6 +21,7 @@ public class StripedCuckooExamSystem : IExamSystem
     {
         if (_cuckooHashSet.Remove((studentId, courseId)))
         {
+            // locking for decrementing count
             lock (_lockerObject) Count--;
         }
     }

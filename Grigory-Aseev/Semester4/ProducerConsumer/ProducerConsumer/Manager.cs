@@ -11,6 +11,8 @@
             List<T> objects = new();
             _agents = new List<Agent<T>>();
 
+            // adding agents
+
             this._agents.AddRange(Enumerable.Range(1, countOfConsumers)
                 .Select(_ => new Consumer<T>(objects, random.Next(1, timePauseLimit), semaphore)).ToList());
             this._agents.AddRange(Enumerable.Range(1, countOfProducers).Select(_ =>
@@ -21,6 +23,7 @@
 
         public void Start()
         {
+            // launch agents till the key is not entered
             LaunchAgents();
             Console.ReadKey(true);
             StopAgents();

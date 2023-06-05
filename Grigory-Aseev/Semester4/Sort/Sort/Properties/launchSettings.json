@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "Sort": {
+      "commandName": "Project",
+      "commandLineArgs": "1"
+    },
+    "Профиль 1": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\Microsoft MPI\\Bin\\mpiexec.exe",
+      "commandLineArgs": "-n 5 C:\\Users\\isims\\spbu_works_new\\spsu-mm-se-programming\\Grigory-Aseev\\Semester4\\Sort\\Sort\\bin\\Debug\\net7.0\\Sort.exe C:\\Users\\isims\\spbu_works_new\\spsu-mm-se-programming\\Grigory-Aseev\\Semester4\\Sort\\TestCases\\unsorted1.dat C:\\Users\\isims\\spbu_works_new\\spsu-mm-se-programming\\Grigory-Aseev\\Semester4\\Sort\\TestResults\\result1.dat \" \"",
+      "workingDirectory": "C:\\Users\\isims\\spbu_works_new\\spsu-mm-se-programming\\Grigory-Aseev\\Semester4\\Sort\\Sort\\bin\\Debug\\net7.0"
+    }
+  }
+}

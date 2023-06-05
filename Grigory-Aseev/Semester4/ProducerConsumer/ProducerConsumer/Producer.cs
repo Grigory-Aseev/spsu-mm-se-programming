@@ -12,6 +12,7 @@
 
         protected override void Act()
         {
+            // creating an object
             var someObject = _creationObjectFunc();
             Objects.Add(someObject);
 

@@ -27,6 +27,7 @@ public abstract class Agent<T>
     {
         while (!_stop)
         {
+            // critical section with semaphore to act something, agents working until stop
             _semaphore.WaitOne();
 
             Act();
@@ -37,12 +38,14 @@ public abstract class Agent<T>
         }
     }
 
+    // agent starts working
     public void Start()
     {
         _stop = false;
         _thread.Start();
     }
 
+    // agent stops working
     public void Stop()
     {
         _stop = true;

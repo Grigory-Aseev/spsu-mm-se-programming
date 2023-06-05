@@ -12,6 +12,12 @@ public class LazySet<T>
         _head.Next = _tail;
     }
 
+    /*
+        Now we check that both nodes are not logically remote
+        And we check that the first refers to the second.
+        This approach allows you to very advantageously increase the speed.
+    */
+
     private bool Validate(Node<T> pred, Node<T> curr)
     {
         return !pred.Marked && !curr.Marked && pred.Next == curr;
@@ -90,6 +96,9 @@ public class LazySet<T>
                         }
                         else
                         {
+                            // initially curr.Marked = false
+                            // deletion does not happen immediately. First there is a logical deletion (marked becomes)
+                            // and physical removal occurs later
                             curr.Marked = true;
                             pred.Next = curr.Next;
                             Count--;
@@ -109,13 +118,15 @@ public class LazySet<T>
         }
     }
 
-
+    /*There are no blocks at all*/
     public bool Сontains(T item)
     {
         int key = item.GetHashCode();
         Node<T> curr = _head;
         while (curr.Key < key)
             curr = curr.Next;
+
+        // be sure to check that the node is not deleted
         return curr.Key == key && !curr.Marked;
     }
 }

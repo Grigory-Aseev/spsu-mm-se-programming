@@ -9,6 +9,7 @@ public static class ProcessManager
 
     public static void Switch(bool fiberFinished)
     {
+        // stop the fiber and continue planning the next fiber
         scheduler.StopFiber(fiberFinished);
         scheduler.Schedule();
     }

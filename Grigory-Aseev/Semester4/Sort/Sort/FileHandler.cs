@@ -8,6 +8,7 @@
 
             try
             {
+                // read file
                 data = File.ReadAllText(path);
             }
             catch
@@ -16,11 +17,14 @@
                 return new List<int>();
             }
 
+            // separate the data with the separator
+
             var separatedData = data.Split(sep).ToList();
 
 
             try
             {
+                // parse integers
                 var numbers = separatedData
                     .Select(s => int.TryParse(s, out var n) ? n : throw new Exception("Invalid data format")).ToList();
                 return numbers;

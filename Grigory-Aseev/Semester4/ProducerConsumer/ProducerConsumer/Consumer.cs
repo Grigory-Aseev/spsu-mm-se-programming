@@ -9,6 +9,7 @@
 
         protected override void Act()
         {
+            // taking an object
             if (Objects.Count == 0) return;
             Console.WriteLine(
                 $"Consumer with {Environment.CurrentManagedThreadId} thread flow extracted object {Objects[0]}.");

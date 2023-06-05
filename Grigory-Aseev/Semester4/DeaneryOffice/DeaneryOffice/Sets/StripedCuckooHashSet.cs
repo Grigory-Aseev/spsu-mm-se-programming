@@ -19,12 +19,14 @@ public class StripedCuckooHashSet<T> : PhasedCuckooHashSet<T>
 
     protected override void Acquire(T x)
     {
+        // lock the appropriate mutex
         locks[0, Hash0(x) % locks.GetLength(1)].WaitOne();
         locks[1, Hash1(x) % locks.GetLength(1)].WaitOne();
     }
 
     protected override void Release(T x)
     {
+        // release the appropriate mutex
         locks[0, Hash0(x) % locks.GetLength(1)].ReleaseMutex();
         locks[1, Hash1(x) % locks.GetLength(1)].ReleaseMutex();
     }
@@ -32,6 +34,8 @@ public class StripedCuckooHashSet<T> : PhasedCuckooHashSet<T>
     protected override void Resize()
     {
         int oldCapacity = capacity;
+        // all mutexes are locked at index 0
+        // there is no sense more than zero, since we take and release at the same time
         for (int i = 0; i < locks.GetLength(1); i++)
         {
             locks[0, i].WaitOne();
@@ -39,10 +43,13 @@ public class StripedCuckooHashSet<T> : PhasedCuckooHashSet<T>
 
         try
         {
+            // if we were thwarted
             if (capacity != oldCapacity)
             {
                 return;
             }
+
+            // resize the table
 
             List<T>[,] oldTable = table;
             capacity = 2 * capacity;
@@ -56,6 +63,7 @@ public class StripedCuckooHashSet<T> : PhasedCuckooHashSet<T>
                 }
             }
 
+            // For each element, honestly call the add method
             for (int i = 0; i < 2; i++)
             {
                 for (int j = 0; j < oldCapacity; j++)
@@ -69,6 +77,7 @@ public class StripedCuckooHashSet<T> : PhasedCuckooHashSet<T>
         }
         finally
         {
+            // release mutexes
             for (int i = 0; i < locks.GetLength(1); i++)
             {
                 locks[0, i].ReleaseMutex();
