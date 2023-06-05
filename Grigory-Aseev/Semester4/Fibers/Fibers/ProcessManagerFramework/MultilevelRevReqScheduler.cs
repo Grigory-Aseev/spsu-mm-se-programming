@@ -12,6 +12,7 @@ public sealed class MultilevelRevReqScheduler : IScheduler
     private readonly PriorityQueue<FiberStorage, long>[] _fibers;
     private readonly Queue<FiberStorage> _fibersLowest;
     private uint _deprecatedFiber;
+    private bool _isLast;
 
     public MultilevelRevReqScheduler()
     {
@@ -39,10 +40,10 @@ public sealed class MultilevelRevReqScheduler : IScheduler
 
     public void Schedule()
     {
-        
+
         var (nextFiber, isLowest) = FindFiber();
 
-        if (nextFiber != null)
+        if (nextFiber != null && Count() > 1)
         {
             if (isLowest && _fibersLowest.Count / NumberLayers > 0)
                 for (var i = 0; i < _fibersLowest.Count / NumberLayers; i++)
@@ -57,14 +58,19 @@ public sealed class MultilevelRevReqScheduler : IScheduler
             nextFiber.StartTime = time;
             Fiber.Switch(nextFiber.Id);
         }
-        else
+        else if (nextFiber == null)
         {
+
             if (Fiber.PrimaryId != 0)
                 Fiber.Switch(Fiber.PrimaryId);
             else
                 throw new InvalidOperationException("There is no process at the moment.");
         }
-
+        else if (!_isLast)
+        {
+            _isLast = true;
+            Fiber.Switch(nextFiber.Id);
+        }
     }
 
     public void StopFiber(bool isFinished)
@@ -129,7 +135,7 @@ public sealed class MultilevelRevReqScheduler : IScheduler
         var fiberStorage = new FiberStorage(fiber.Id, process.Priority, fiberTime);
         _fibers[0].Enqueue(fiberStorage, fiberStorage.Priority);
     }
-    
+
     public void Dispose()
     {
         if (_deprecatedFiber == 0)
